@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Button Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 2px solid #ccc;
+            border-radius: 8px;
+        }
+        .btn {
+            padding: 8px 20px;
+            border-radius: 30px;
+            margin: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            cursor: pointer;
+            display: inline-block;
+        }
+        .btn-login { 
+            background-color: #34a853; 
+            color: white; 
+            border: 1px solid #34a853;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f0f0f0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Login Button Click Test</h1>
+    
+    <div class="test-section">
+        <h2>Test 1: Simple Button with onclick</h2>
+        <button class="btn btn-login" onclick="showResult('test1', 'Button clicked!')">
+            Click Me (Button Element)
+        </button>
+        <div id="test1" class="result">Waiting for click...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 2: Link styled as button with ID</h2>
+        <a href="#" class="btn btn-login" id="testLoginBtn">Click Me (Link Element)</a>
+        <div id="test2" class="result">Waiting for click...</div>
+    </div>
+
+    <div class="test-section">
+        <h2>Test 3: Your actual login button HTML</h2>
+        <a href="javascript:void(0)" class="btn btn-login" id="loginBtn">Login</a>
+        <div id="test3" class="result">Waiting for click...</div>
+    </div>
+
+    <script>
+        function showResult(id, message) {
+            document.getElementById(id).textContent = message;
+            console.log(id + ': ' + message);
+        }
+
+        // Test 2 handler
+        document.getElementById('testLoginBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            showResult('test2', 'Link clicked via addEventListener!');
+        });
+
+        // Test 3 handler - mimicking your code
+        document.getElementById('loginBtn').onclick = function(e) {
+            e.preventDefault();
+            showResult('test3', 'Login button clicked via onclick!');
+        };
+
+        console.log('Test page loaded. All handlers attached.');
+    </script>
+</body>
+</html>
