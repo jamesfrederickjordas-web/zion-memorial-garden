@@ -15,13 +15,8 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// Serve static files (HTML, CSS, JS, images)
+// Serve static files - improved for Vercel
 app.use(express.static(path.join(__dirname)));
-
-// Serve index.html on root
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
 
 // ====================== DATABASE (SUPABASE) ======================
 const pool = new Pool({
@@ -32,9 +27,6 @@ const pool = new Pool({
 });
 
 // ====================== EMAIL SETUP ======================
-console.log("EMAIL_USER:", process.env.EMAIL_USER);
-console.log("EMAIL_PASS length:", process.env.EMAIL_PASS ? process.env.EMAIL_PASS.length : "MISSING");
-
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -43,41 +35,24 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-transporter.verify(function (error, success) {
-    if (error) {
-        console.log("❌ EMAIL CONNECTION FAILED:");
-        console.log(error);
-    } else {
-        console.log("✅ Email server is ready to send messages");
-    }
-});
-
 // ====================== REGISTER ======================
 app.post('/register', async (req, res) => {
     try {
         const { fullName, username, email, phone, password } = req.body;
 
-        console.log("Register attempt for:", email);
-
-        // Check if email already exists
         const emailCheck = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
         if (emailCheck.rows.length > 0) {
             return res.status(400).json({ error: 'Email already registered' });
         }
 
-        // Check if username already exists
         const usernameCheck = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
         if (usernameCheck.rows.length > 0) {
             return res.status(400).json({ error: 'Username already taken' });
         }
 
-        // Hash password
         const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Generate verification token
         const verificationToken = crypto.randomBytes(32).toString('hex');
 
-        // Insert new user
         const result = await pool.query(
             `INSERT INTO users (full_name, username, email, phone, password_hash, is_verified, verification_token)
              VALUES ($1, $2, $3, $4, $5, false, $6)
@@ -86,13 +61,10 @@ app.post('/register', async (req, res) => {
         );
 
         const user = result.rows[0];
-        console.log("User created with ID:", user.id);
 
-        // Verification link
-        const baseUrl = process.env.BASE_URL || 'http://localhost:5000';
+        const baseUrl = process.env.BASE_URL || 'https://zion-memorial-garden.vercel.app';
         const verificationLink = `${baseUrl}/verify-email?token=${verificationToken}`;
 
-        // Send verification email
         const mailOptions = {
             from: `"Zion Memorial Garden" <${process.env.EMAIL_USER}>`,
             to: email,
@@ -110,24 +82,15 @@ app.post('/register', async (req, res) => {
                     <br><br>
                     <p>Or copy and paste this link into your browser:</p>
                     <p style="color: #3498db; word-break: break-all;">${verificationLink}</p>
-                    <br>
-                    <p style="color: #7f8c8d; font-size: 14px;">If you did not create an account, you can ignore this email.</p>
                 </div>
             `
         };
 
-        console.log("Attempting to send email to:", email);
-
         try {
-            const info = await transporter.sendMail(mailOptions);
-            console.log("✅ Email sent successfully!");
-            console.log("Message ID:", info.messageId);
+            await transporter.sendMail(mailOptions);
         } catch (emailError) {
-            console.log("❌ FAILED TO SEND EMAIL:");
-            console.log(emailError);
-            return res.status(500).json({ 
-                error: 'Account created but failed to send verification email. Please contact support.' 
-            });
+            console.log("Email error:", emailError);
+            return res.status(500).json({ error: 'Account created but failed to send verification email.' });
         }
 
         res.status(201).json({
@@ -149,10 +112,7 @@ app.get('/verify-email', async (req, res) => {
             return res.status(400).send('<h2>Invalid verification link</h2>');
         }
 
-        const result = await pool.query(
-            'SELECT * FROM users WHERE verification_token = $1',
-            [token]
-        );
+        const result = await pool.query('SELECT * FROM users WHERE verification_token = $1', [token]);
 
         if (result.rows.length === 0) {
             return res.status(400).send(`
@@ -174,8 +134,7 @@ app.get('/verify-email', async (req, res) => {
                 <p>Hi <strong>${user.full_name}</strong>, your account has been verified.</p>
                 <p>You can now log in to Zion Memorial Garden.</p>
                 <br>
-                <a href="/" 
-                   style="background-color: #27ae60; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px;">
+                <a href="/" style="background-color: #27ae60; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px;">
                     Go to Login
                 </a>
             </div>
@@ -299,13 +258,27 @@ app.get('/profile', async (req, res) => {
     }
 });
 
+// ====================== ROOT ROUTE (IMPORTANT) ======================
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Catch-all for other HTML pages
+app.get('/:page', (req, res) => {
+    const page = req.params.page;
+    const filePath = path.join(__dirname, page.endsWith('.html') ? page : page + '.html');
+    res.sendFile(filePath, (err) => {
+        if (err) {
+            res.status(404).send('Page not found');
+        }
+    });
+});
+
 // ====================== START SERVER ======================
-// For local development
 if (require.main === module) {
     app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
     });
 }
 
-// For Vercel
 module.exports = app;
