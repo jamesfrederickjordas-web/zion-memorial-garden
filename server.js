@@ -1,4 +1,3 @@
-// FORCE REDEPLOY - static files enabled
 const express = require('express');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
@@ -12,21 +11,24 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+// ====================== MIDDLEWARE ======================
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
 // Serve static files (HTML, CSS, JS, images)
 app.use(express.static(path.join(__dirname)));
 
-// Serve index.html when user opens the root URL
+// Serve index.html on root
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// Database connection
+// ====================== DATABASE (SUPABASE) ======================
 const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false
+    }
 });
 
 // ====================== EMAIL SETUP ======================
@@ -41,7 +43,6 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// Test the email connection when server starts
 transporter.verify(function (error, success) {
     if (error) {
         console.log("❌ EMAIL CONNECTION FAILED:");
@@ -87,8 +88,9 @@ app.post('/register', async (req, res) => {
         const user = result.rows[0];
         console.log("User created with ID:", user.id);
 
-        // Use your Railway domain for the verification link
-        const verificationLink = `https://zion-memorial-garden-production.up.railway.app/verify-email?token=${verificationToken}`;
+        // Verification link
+        const baseUrl = process.env.BASE_URL || 'http://localhost:5000';
+        const verificationLink = `${baseUrl}/verify-email?token=${verificationToken}`;
 
         // Send verification email
         const mailOptions = {
@@ -155,7 +157,7 @@ app.get('/verify-email', async (req, res) => {
         if (result.rows.length === 0) {
             return res.status(400).send(`
                 <h2 style="color: red;">Invalid or expired verification link</h2>
-                <p><a href="https://zion-memorial-garden-production.up.railway.app">Go back to website</a></p>
+                <p><a href="/">Go back to website</a></p>
             `);
         }
 
@@ -172,7 +174,7 @@ app.get('/verify-email', async (req, res) => {
                 <p>Hi <strong>${user.full_name}</strong>, your account has been verified.</p>
                 <p>You can now log in to Zion Memorial Garden.</p>
                 <br>
-                <a href="https://zion-memorial-garden-production.up.railway.app" 
+                <a href="/" 
                    style="background-color: #27ae60; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px;">
                     Go to Login
                 </a>
@@ -252,7 +254,7 @@ app.put('/update-profile', async (req, res) => {
              SET full_name = $1, username = $2, phone = $3, profile_picture = $4, updated_at = NOW()
              WHERE id = $5
              RETURNING id, full_name, username, email, phone, profile_picture, is_verified, created_at, updated_at`,
-            [fullName, username, phone, profilePicture || '', decoded.id]
+            [fullName, username, phone, profilePicture || null, decoded.id]
         );
 
         if (result.rows.length === 0) {
@@ -297,7 +299,13 @@ app.get('/profile', async (req, res) => {
     }
 });
 
-// Start server
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+// ====================== START SERVER ======================
+// For local development
+if (require.main === module) {
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+    });
+}
+
+// For Vercel
+module.exports = app;
