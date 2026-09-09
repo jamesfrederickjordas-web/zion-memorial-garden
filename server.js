@@ -15,8 +15,8 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// Serve static files - improved for Vercel
-app.use(express.static(path.join(__dirname)));
+// Serve static files from the "public" folder
+app.use(express.static(path.join(__dirname, 'public')));
 
 // ====================== DATABASE (SUPABASE) ======================
 const pool = new Pool({
@@ -258,20 +258,9 @@ app.get('/profile', async (req, res) => {
     }
 });
 
-// ====================== ROOT ROUTE (IMPORTANT) ======================
+// ====================== ROOT ROUTE ======================
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
-
-// Catch-all for other HTML pages
-app.get('/:page', (req, res) => {
-    const page = req.params.page;
-    const filePath = path.join(__dirname, page.endsWith('.html') ? page : page + '.html');
-    res.sendFile(filePath, (err) => {
-        if (err) {
-            res.status(404).send('Page not found');
-        }
-    });
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
 // ====================== START SERVER ======================
