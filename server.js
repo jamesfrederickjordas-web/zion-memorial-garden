@@ -16,9 +16,9 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// Stronger static file serving for Vercel
-app.use(express.static(path.join(__dirname)));
-app.use(express.static(path.join(process.cwd())));
+// Serve static files
+app.use(express.static(__dirname));
+app.use(express.static(process.cwd()));
 app.use('/css', express.static(path.join(__dirname, 'css')));
 app.use('/js', express.static(path.join(__dirname, 'js')));
 app.use('/components', express.static(path.join(__dirname, 'components')));
@@ -243,11 +243,12 @@ app.get('/profile', async (req, res) => {
     }
 });
 
-// ====================== ROOT + TEST ======================
+// ====================== TEST ROUTE ======================
 app.get('/test', (req, res) => {
     res.send('Server is working! ✅');
 });
 
+// ====================== ROOT ROUTE ======================
 app.get('/', (req, res) => {
     const possiblePaths = [
         path.join(__dirname, 'index.html'),
@@ -261,14 +262,30 @@ app.get('/', (req, res) => {
         }
     }
 
-    res.status(404).send(`
-        <h1>index.html not found</h1>
-        <p>Please make sure index.html is in the root of the GitHub repository.</p>
-        <p><a href="/test">Test route</a></p>
-    `);
+    res.status(404).send('index.html not found');
 });
 
-// ====================== START ======================
+// ====================== SERVE OTHER HTML PAGES ======================
+app.get('/:page', (req, res) => {
+    const page = req.params.page;
+    const fileName = page.endsWith('.html') ? page : page + '.html';
+
+    const possiblePaths = [
+        path.join(__dirname, fileName),
+        path.join(process.cwd(), fileName),
+        path.join(__dirname, 'public', fileName)
+    ];
+
+    for (const p of possiblePaths) {
+        if (fs.existsSync(p)) {
+            return res.sendFile(p);
+        }
+    }
+
+    res.status(404).send(`Cannot GET /${fileName}`);
+});
+
+// ====================== START SERVER ======================
 if (require.main === module) {
     app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
