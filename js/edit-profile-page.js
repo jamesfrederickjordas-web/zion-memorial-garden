@@ -37,7 +37,7 @@ function initEditProfilePage() {
             
             try {
                 const token = sessionStorage.getItem('authToken');
-                const response = await fetch('http://localhost:5000/update-profile', {
+                const response = await fetch('/update-profile', {
                     method: 'PUT',
                     headers: { 
                         'Content-Type': 'application/json',
