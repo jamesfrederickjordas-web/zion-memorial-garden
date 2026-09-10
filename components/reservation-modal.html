@@ -1,0 +1,85 @@
+<!-- Reservation Modal -->
+<div id="reservationModal" class="reservation-modal-overlay">
+    <!-- Reservation Header -->
+    <header class="reservation-modal-header">
+        <div class="reservation-modal-logo">
+            <img src="assets/dashboard/logo half.png" alt="Logo">
+        </div>
+        <div class="reservation-modal-icons">
+            <button class="reservation-menu-btn" id="reservationMenuBtn">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <button class="reservation-user-btn" id="reservationUserBtn">
+                <img src="assets/images/icons/Jims.png" alt="User">
+            </button>
+        </div>
+    </header>
+
+    <div class="reservation-modal-content">
+        <div class="reservation-header">
+            <h2>Select Lawn</h2>
+        </div>
+
+        <!-- Lawn Type Tabs -->
+        <div class="lawn-tabs">
+            <button class="lawn-tab active" data-lawn="condominium">Condominium</button>
+            <button class="lawn-tab" data-lawn="single-teired">Single Teired</button>
+            <button class="lawn-tab" data-lawn="supreme">Supreme</button>
+            <button class="lawn-tab" data-lawn="special-supreme">Special Supreme</button>
+            <button class="lawn-tab" data-lawn="mausoleum">Mausoleum</button>
+        </div>
+
+        <!-- Lawn Description -->
+        <div class="lawn-description">
+            <h3 id="lawnTitle">Condominium:</h3>
+            <p id="lawnDesc">A vertical interment facility featuring stacked, above-ground vaults. This section offers a structured and organized memorial space, utilizing a multi-level grid system for efficient space management and easy identification of individual niches</p>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="reservation-grid">
+            <!-- Left Section - Legend -->
+            <div class="legend-section">
+                <div class="legend-card">
+                    <h3>Legend</h3>
+                    <div class="legend-items">
+                        <div class="legend-item">
+                            <span class="legend-color most-populated"></span>
+                            <span>Most Populated</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color least-populated"></span>
+                            <span>Least Populated</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color family-estate"></span>
+                            <span>Family Estate Jr.</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-color condominium-color"></span>
+                            <span>Condominium</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Center Section - Map -->
+            <div class="reservation-map-section">
+                <img src="assets/images/backgrounds/mapping basomuch.png" alt="Cemetery Map" class="reservation-map">
+                
+                <!-- Clickable Vector Shape 10 Overlay -->
+                <a href="plot-details.html?section=lawn-condominium" class="shape-10-overlay" title="Click to view Lawn Condominium plots">
+                    <img src="assets/images/Map/Vector (14).png" alt="Shape 10 - Lawn Condominium">
+                </a>
+            </div>
+
+            <!-- Right Section - Location Title -->
+            <div class="location-title-section">
+                <div class="location-title-card">
+                    <h3>Select your desire Location</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
