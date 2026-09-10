@@ -260,6 +260,11 @@ app.get('/profile', async (req, res) => {
     }
 });
 
+// ====================== TEST ROUTE ======================
+app.get('/test', (req, res) => {
+    res.send('Server is working! ✅');
+});
+
 // ====================== ROOT ROUTE ======================
 app.get('/', (req, res) => {
     const indexPath1 = path.join(__dirname, 'index.html');
