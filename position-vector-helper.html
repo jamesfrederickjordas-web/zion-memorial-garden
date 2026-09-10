@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Position Vector 14 on Shape 10</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+            margin: 0;
+        }
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        h1 {
+            color: #333;
+        }
+        .preview-container {
+            position: relative;
+            display: inline-block;
+            margin: 20px 0;
+            background: #e8e4d9;
+            padding: 20px;
+        }
+        .map-image {
+            display: block;
+            transform: rotate(30deg);
+            transform-origin: center;
+            max-width: 800px;
+        }
+        .vector-overlay {
+            position: absolute;
+            cursor: move;
+            z-index: 10;
+            border: 2px dashed red;
+            transition: none;
+        }
+        .vector-overlay img {
+            width: 100%;
+            height: auto;
+            display: block;
+            pointer-events: none;
+        }
+        .controls {
+            background: #f9f9f9;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .control-group {
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .control-group label {
+            min-width: 100px;
+            font-weight: bold;
+        }
+        .control-group input[type="range"] {
+            flex: 1;
+            max-width: 300px;
+        }
+        .control-group input[type="number"] {
+            width: 80px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+        }
+        .css-output {
+            background: #fff;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            margin: 20px 0;
+        }
+        button {
+            background: #d4af37;
+            color: #333;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #c19b2a;
+        }
+        .instructions {
+            background: #fff3cd;
+            padding: 15px;
+            border-left: 4px solid #ffc107;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Position Vector 14 on Shape 10</h1>
+        
+        <div class="instructions">
+            <h3>Instructions:</h3>
+            <ol>
+                <li><strong>Drag the red-bordered vector image</strong> to position it exactly on top of shape 10</li>
+                <li><strong>Use the sliders below</strong> to fine-tune the position and size</li>
+                <li><strong>Copy the generated CSS</strong> at the bottom</li>
+                <li><strong>Paste it into css/reservation-modal.css</strong> (replace the .shape-10-overlay section)</li>
+            </ol>
+        </div>
+
+        <div class="preview-container" id="previewContainer">
+            <img src="assets/images/backgrounds/mapping basomuch.png" alt="Cemetery Map" class="map-image">
+            <div class="vector-overlay" id="vectorOverlay">
+                <img src="assets/images/Map/Vector (14).png" alt="Vector 14">
+            </div>
+        </div>
+
+        <div class="controls">
+            <h3>Position & Size Controls</h3>
+            
+            <div class="control-group">
+                <label>Top Position:</label>
+                <input type="range" id="topSlider" min="0" max="100" value="35" step="0.5">
+                <input type="number" id="topValue" min="0" max="100" value="35" step="0.5">
+                <span>%</span>
+            </div>
+
+            <div class="control-group">
+                <label>Left Position:</label>
+                <input type="range" id="leftSlider" min="0" max="100" value="45" step="0.5">
+                <input type="number" id="leftValue" min="0" max="100" value="45" step="0.5">
+                <span>%</span>
+            </div>
+
+            <div class="control-group">
+                <label>Width:</label>
+                <input type="range" id="widthSlider" min="5" max="30" value="15" step="0.5">
+                <input type="number" id="widthValue" min="5" max="30" value="15" step="0.5">
+                <span>%</span>
+            </div>
+
+            <div class="control-group">
+                <label>Rotation:</label>
+                <input type="range" id="rotationSlider" min="0" max="360" value="30" step="1">
+                <input type="number" id="rotationValue" min="0" max="360" value="30" step="1">
+                <span>degrees</span>
+            </div>
+
+            <button onclick="resetPosition()">🔄 Reset to Default</button>
+            <button onclick="copyCSS()">📋 Copy CSS</button>
+        </div>
+
+        <div class="controls">
+            <h3>Generated CSS Code:</h3>
+            <div class="css-output" id="cssOutput"></div>
+        </div>
+    </div>
+
+    <script>
+        const vectorOverlay = document.getElementById('vectorOverlay');
+        const topSlider = document.getElementById('topSlider');
+        const leftSlider = document.getElementById('leftSlider');
+        const widthSlider = document.getElementById('widthSlider');
+        const rotationSlider = document.getElementById('rotationSlider');
+        const topValue = document.getElementById('topValue');
+        const leftValue = document.getElementById('leftValue');
+        const widthValue = document.getElementById('widthValue');
+        const rotationValue = document.getElementById('rotationValue');
+        const cssOutput = document.getElementById('cssOutput');
+
+        let isDragging = false;
+        let startX, startY, startTop, startLeft;
+
+        // Dragging functionality
+        vectorOverlay.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            const rect = vectorOverlay.getBoundingClientRect();
+            const parentRect = vectorOverlay.parentElement.getBoundingClientRect();
+            startTop = ((rect.top - parentRect.top) / parentRect.height) * 100;
+            startLeft = ((rect.left - parentRect.left) / parentRect.width) * 100;
+            vectorOverlay.style.cursor = 'grabbing';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            
+            const parentRect = vectorOverlay.parentElement.getBoundingClientRect();
+            const deltaX = e.clientX - startX;
+            const deltaY = e.clientY - startY;
+            
+            const newLeft = startLeft + (deltaX / parentRect.width) * 100;
+            const newTop = startTop + (deltaY / parentRect.height) * 100;
+            
+            leftSlider.value = Math.max(0, Math.min(100, newLeft));
+            topSlider.value = Math.max(0, Math.min(100, newTop));
+            
+            updatePosition();
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            vectorOverlay.style.cursor = 'move';
+        });
+
+        // Slider controls
+        topSlider.addEventListener('input', updatePosition);
+        leftSlider.addEventListener('input', updatePosition);
+        widthSlider.addEventListener('input', updatePosition);
+        rotationSlider.addEventListener('input', updatePosition);
+
+        topValue.addEventListener('input', (e) => {
+            topSlider.value = e.target.value;
+            updatePosition();
+        });
+
+        leftValue.addEventListener('input', (e) => {
+            leftSlider.value = e.target.value;
+            updatePosition();
+        });
+
+        widthValue.addEventListener('input', (e) => {
+            widthSlider.value = e.target.value;
+            updatePosition();
+        });
+
+        rotationValue.addEventListener('input', (e) => {
+            rotationSlider.value = e.target.value;
+            updatePosition();
+        });
+
+        function updatePosition() {
+            const top = topSlider.value;
+            const left = leftSlider.value;
+            const width = widthSlider.value;
+            const rotation = rotationSlider.value;
+
+            vectorOverlay.style.top = top + '%';
+            vectorOverlay.style.left = left + '%';
+            vectorOverlay.style.width = width + '%';
+            vectorOverlay.style.transform = `rotate(${rotation}deg)`;
+
+            topValue.value = top;
+            leftValue.value = left;
+            widthValue.value = width;
+            rotationValue.value = rotation;
+
+            generateCSS();
+        }
+
+        function generateCSS() {
+            const top = topSlider.value;
+            const left = leftSlider.value;
+            const width = widthSlider.value;
+            const rotation = rotationSlider.value;
+
+            const css = `.shape-10-overlay {
+    position: absolute;
+    top: ${top}%;
+    left: ${left}%;
+    width: ${width}%;
+    height: auto;
+    transform: rotate(${rotation}deg);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 10;
+}
+
+.shape-10-overlay img {
+    width: 100%;
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.5));
+}
+
+.shape-10-overlay:hover {
+    transform: rotate(${rotation}deg) scale(1.05);
+    filter: brightness(1.2);
+}
+
+.shape-10-overlay:hover img {
+    filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.8));
+}`;
+
+            cssOutput.textContent = css;
+        }
+
+        function resetPosition() {
+            topSlider.value = 35;
+            leftSlider.value = 45;
+            widthSlider.value = 15;
+            rotationSlider.value = 30;
+            updatePosition();
+        }
+
+        function copyCSS() {
+            navigator.clipboard.writeText(cssOutput.textContent).then(() => {
+                alert('✅ CSS copied to clipboard!\n\nNow paste it into css/reservation-modal.css');
+            });
+        }
+
+        // Initialize
+        updatePosition();
+    </script>
+</body>
+</html>

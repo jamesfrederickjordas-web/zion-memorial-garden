@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Map Coordinate Mapper - Shape 10</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        h1 {
+            color: #333;
+        }
+        .image-container {
+            position: relative;
+            display: inline-block;
+            margin: 20px 0;
+            background: #e8e4d9;
+            padding: 20px;
+        }
+        #mapImage {
+            max-width: 100%;
+            height: auto;
+            cursor: crosshair;
+            border: 2px solid #333;
+            transform: rotate(30deg);
+            transform-origin: center;
+        }
+        .point {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: red;
+            border: 3px solid white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+            z-index: 100;
+        }
+        .point-label {
+            position: absolute;
+            background: red;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+            transform: translate(-50%, -200%);
+            white-space: nowrap;
+        }
+        .coordinates {
+            background: #f9f9f9;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .coordinates h3 {
+            margin-top: 0;
+        }
+        .coord-list {
+            font-family: monospace;
+            background: #fff;
+            padding: 10px;
+            border: 1px solid #ddd;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        button {
+            background: #d4af37;
+            color: #333;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #c19b2a;
+        }
+        .instructions {
+            background: #fff3cd;
+            padding: 15px;
+            border-left: 4px solid #ffc107;
+            margin: 20px 0;
+        }
+        .instructions strong {
+            color: #d4af37;
+            font-size: 18px;
+        }
+        .warning {
+            background: #f8d7da;
+            padding: 15px;
+            border-left: 4px solid #dc3545;
+            margin: 20px 0;
+            color: #721c24;
+        }
+        .success {
+            background: #d4edda;
+            padding: 15px;
+            border-left: 4px solid #28a745;
+            margin: 20px 0;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗺️ Find Shape 10 Pentagon - Coordinate Mapper</h1>
+        
+        <div class="warning">
+            <h3>⚠️ IMPORTANT: Click on SHAPE 10 ONLY!</h3>
+            <p>Look for the <strong>PENTAGON shape labeled "10"</strong> on the map below.</p>
+            <p>The map is rotated 30 degrees, so the pentagon might look tilted.</p>
+        </div>
+
+        <div class="instructions">
+            <h3>📍 Instructions to Find Shape 10:</h3>
+            <ol>
+                <li><strong>Look at the rotated map below</strong></li>
+                <li><strong>Find the pentagon shape with number "10" inside it</strong></li>
+                <li><strong>Click the 5 corners of ONLY that pentagon in this order:</strong>
+                    <ul>
+                        <li>1️⃣ Top corner</li>
+                        <li>2️⃣ Top-left corner</li>
+                        <li>3️⃣ Bottom-left corner</li>
+                        <li>4️⃣ Bottom-right corner</li>
+                        <li>5️⃣ Top-right corner</li>
+                    </ul>
+                </li>
+                <li><strong>Copy the coordinates below</strong></li>
+                <li><strong>Paste them into components/reservation-modal.html</strong></li>
+            </ol>
+        </div>
+
+        <div class="image-container" id="imageContainer">
+            <img id="mapImage" src="assets/images/backgrounds/mapping basomuch.png" alt="Cemetery Map">
+        </div>
+
+        <div class="coordinates">
+            <h3>Polygon Coordinates for Shape 10:</h3>
+            <div class="coord-list" id="coordList">Click on the 5 corners of the pentagon labeled "10"...</div>
+            <button onclick="copyCoordinates()">📋 Copy Coordinates</button>
+            <button onclick="clearPoints()">🗑️ Clear Points & Start Over</button>
+            <button onclick="testLink()">🔗 Test Link</button>
+        </div>
+
+        <div class="success" id="successMessage" style="display: none;">
+            <h3>✅ Coordinates Ready!</h3>
+            <p>Now copy these coordinates and paste them into <code>components/reservation-modal.html</code></p>
+            <p>Find the line with <code>&lt;area shape="poly" coords="..."</code> and replace the coords value.</p>
+        </div>
+
+        <div class="coordinates">
+            <h3>Complete HTML Code:</h3>
+            <div class="coord-list" id="htmlCode">
+&lt;area shape="poly" coords="..." href="plot-details.html?section=lawn-condominium" alt="Lawn Condominium Section 10" title="Click to view Lawn Condominium plots"&gt;
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const points = [];
+        const imageContainer = document.getElementById('imageContainer');
+        const mapImage = document.getElementById('mapImage');
+        const coordList = document.getElementById('coordList');
+        const htmlCode = document.getElementById('htmlCode');
+        const successMessage = document.getElementById('successMessage');
+
+        mapImage.addEventListener('click', function(e) {
+            if (points.length >= 5) {
+                alert('You already have 5 points! Click "Clear Points" to start over.');
+                return;
+            }
+
+            const rect = this.getBoundingClientRect();
+            const x = Math.round(e.clientX - rect.left);
+            const y = Math.round(e.clientY - rect.top);
+            
+            addPoint(x, y);
+        });
+
+        function addPoint(x, y) {
+            points.push({x, y});
+            
+            // Create visual point
+            const point = document.createElement('div');
+            point.className = 'point';
+            point.style.left = x + 'px';
+            point.style.top = y + 'px';
+            
+            // Add label
+            const label = document.createElement('div');
+            label.className = 'point-label';
+            label.textContent = `Point ${points.length}`;
+            label.style.left = x + 'px';
+            label.style.top = y + 'px';
+            
+            point.onclick = function(e) {
+                e.stopPropagation();
+                const index = Array.from(imageContainer.querySelectorAll('.point')).indexOf(point);
+                removePoint(index);
+            };
+            
+            imageContainer.appendChild(point);
+            imageContainer.appendChild(label);
+            updateCoordinates();
+
+            if (points.length === 5) {
+                successMessage.style.display = 'block';
+            }
+        }
+
+        function removePoint(index) {
+            points.splice(index, 1);
+            const pointElements = imageContainer.querySelectorAll('.point');
+            const labelElements = imageContainer.querySelectorAll('.point-label');
+            pointElements[index].remove();
+            labelElements[index].remove();
+            updateCoordinates();
+            successMessage.style.display = 'none';
+        }
+
+        function updateCoordinates() {
+            if (points.length === 0) {
+                coordList.textContent = 'Click on the 5 corners of the pentagon labeled "10"...';
+                htmlCode.innerHTML = '&lt;area shape="poly" coords="..." href="plot-details.html?section=lawn-condominium" alt="Lawn Condominium Section 10" title="Click to view Lawn Condominium plots"&gt;';
+                return;
+            }
+
+            const coordString = points.map(p => `${p.x},${p.y}`).join(', ');
+            coordList.innerHTML = `<strong style="color: green;">${coordString}</strong><br><br>Points marked: ${points.length}/5`;
+            
+            const htmlString = `&lt;area shape="poly" 
+      coords="${coordString}" 
+      href="plot-details.html?section=lawn-condominium" 
+      alt="Lawn Condominium Section 10" 
+      title="Click to view Lawn Condominium plots"&gt;`;
+            
+            htmlCode.innerHTML = htmlString;
+        }
+
+        function copyCoordinates() {
+            if (points.length < 5) {
+                alert('Please mark all 5 corners of the pentagon first!');
+                return;
+            }
+            const coordString = points.map(p => `${p.x},${p.y}`).join(', ');
+            navigator.clipboard.writeText(coordString).then(() => {
+                alert('✅ Coordinates copied to clipboard!\n\nNow paste them into components/reservation-modal.html');
+            });
+        }
+
+        function clearPoints() {
+            points.length = 0;
+            const pointElements = imageContainer.querySelectorAll('.point');
+            const labelElements = imageContainer.querySelectorAll('.point-label');
+            pointElements.forEach(p => p.remove());
+            labelElements.forEach(l => l.remove());
+            updateCoordinates();
+            successMessage.style.display = 'none';
+        }
+
+        function testLink() {
+            if (points.length < 5) {
+                alert('Please mark all 5 corners of the pentagon first!');
+                return;
+            }
+            window.open('plot-details.html?section=lawn-condominium', '_blank');
+        }
+    </script>
+</body>
+</html>
