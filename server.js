@@ -6,6 +6,7 @@ const nodemailer = require('nodemailer');
 const { Pool } = require('pg');
 const crypto = require('crypto');
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const app = express();
@@ -15,8 +16,9 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// Serve static files from the "public" folder
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve static files from the root
+app.use(express.static(__dirname));
+app.use(express.static(process.cwd()));
 
 // ====================== DATABASE (SUPABASE) ======================
 const pool = new Pool({
@@ -260,7 +262,17 @@ app.get('/profile', async (req, res) => {
 
 // ====================== ROOT ROUTE ======================
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    const indexPath1 = path.join(__dirname, 'index.html');
+    const indexPath2 = path.join(process.cwd(), 'index.html');
+
+    if (fs.existsSync(indexPath1)) {
+        return res.sendFile(indexPath1);
+    }
+    if (fs.existsSync(indexPath2)) {
+        return res.sendFile(indexPath2);
+    }
+
+    res.status(404).send('index.html not found on server');
 });
 
 // ====================== START SERVER ======================
