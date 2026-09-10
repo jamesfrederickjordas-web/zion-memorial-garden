@@ -252,8 +252,7 @@ app.get('/test', (req, res) => {
 app.get('/', (req, res) => {
     const possiblePaths = [
         path.join(__dirname, 'index.html'),
-        path.join(process.cwd(), 'index.html'),
-        path.join(__dirname, 'public', 'index.html')
+        path.join(process.cwd(), 'index.html')
     ];
 
     for (const p of possiblePaths) {
@@ -261,8 +260,22 @@ app.get('/', (req, res) => {
             return res.sendFile(p);
         }
     }
-
     res.status(404).send('index.html not found');
+});
+
+// ====================== SPECIFIC ROUTE FOR DASHBOARD ======================
+app.get('/dashboard.html', (req, res) => {
+    const possiblePaths = [
+        path.join(__dirname, 'dashboard.html'),
+        path.join(process.cwd(), 'dashboard.html')
+    ];
+
+    for (const p of possiblePaths) {
+        if (fs.existsSync(p)) {
+            return res.sendFile(p);
+        }
+    }
+    res.status(404).send('dashboard.html not found');
 });
 
 // ====================== SERVE OTHER HTML PAGES ======================
@@ -272,8 +285,7 @@ app.get('/:page', (req, res) => {
 
     const possiblePaths = [
         path.join(__dirname, fileName),
-        path.join(process.cwd(), fileName),
-        path.join(__dirname, 'public', fileName)
+        path.join(process.cwd(), fileName)
     ];
 
     for (const p of possiblePaths) {
