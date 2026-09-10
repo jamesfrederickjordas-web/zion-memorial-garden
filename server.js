@@ -16,20 +16,19 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// Serve static files
-app.use(express.static(__dirname));
-app.use(express.static(process.cwd()));
+// Stronger static file serving for Vercel
+app.use(express.static(path.join(__dirname)));
+app.use(express.static(path.join(process.cwd())));
+app.use('/css', express.static(path.join(__dirname, 'css')));
+app.use('/js', express.static(path.join(__dirname, 'js')));
+app.use('/components', express.static(path.join(__dirname, 'components')));
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
 
 // ====================== DATABASE ======================
-let pool;
-try {
-    pool = new Pool({
-        connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false }
-    });
-} catch (err) {
-    console.error("Database connection error:", err);
-}
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false }
+});
 
 // ====================== EMAIL ======================
 const transporter = nodemailer.createTransport({
@@ -44,8 +43,6 @@ const transporter = nodemailer.createTransport({
 app.post('/register', async (req, res) => {
     try {
         const { fullName, username, email, phone, password } = req.body;
-
-        if (!pool) return res.status(500).json({ error: 'Database not connected' });
 
         const emailCheck = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
         if (emailCheck.rows.length > 0) {
@@ -113,13 +110,9 @@ app.post('/register', async (req, res) => {
 app.get('/verify-email', async (req, res) => {
     try {
         const { token } = req.query;
-
-        if (!token) {
-            return res.status(400).send('<h2>Invalid verification link</h2>');
-        }
+        if (!token) return res.status(400).send('<h2>Invalid verification link</h2>');
 
         const result = await pool.query('SELECT * FROM users WHERE verification_token = $1', [token]);
-
         if (result.rows.length === 0) {
             return res.status(400).send(`
                 <h2 style="color: red;">Invalid or expired verification link</h2>
@@ -128,7 +121,6 @@ app.get('/verify-email', async (req, res) => {
         }
 
         const user = result.rows[0];
-
         await pool.query(
             'UPDATE users SET is_verified = true, verification_token = NULL WHERE id = $1',
             [user.id]
@@ -145,7 +137,6 @@ app.get('/verify-email', async (req, res) => {
                 </a>
             </div>
         `);
-
     } catch (error) {
         console.error('Verification error:', error);
         res.status(500).send('<h2>Server error during verification</h2>');
@@ -163,7 +154,6 @@ app.post('/login', async (req, res) => {
         }
 
         const user = result.rows[0];
-
         const isMatch = await bcrypt.compare(password, user.password_hash);
         if (!isMatch) {
             return res.status(401).json({ error: 'Invalid email or password' });
@@ -171,7 +161,7 @@ app.post('/login', async (req, res) => {
 
         if (!user.is_verified) {
             return res.status(403).json({ 
-                error: 'Please verify your email first. Check your Gmail inbox (and Spam folder) for the verification link.' 
+                error: 'Please verify your email first. Check your Gmail inbox (and Spam folder).' 
             });
         }
 
@@ -196,7 +186,6 @@ app.post('/login', async (req, res) => {
                 updated_at: user.updated_at
             }
         });
-
     } catch (error) {
         console.error('Login error:', error);
         res.status(500).json({ error: 'Server error during login' });
@@ -207,9 +196,7 @@ app.post('/login', async (req, res) => {
 app.put('/update-profile', async (req, res) => {
     try {
         const token = req.headers.authorization?.split(' ')[1];
-        if (!token) {
-            return res.status(401).json({ error: 'No token provided' });
-        }
+        if (!token) return res.status(401).json({ error: 'No token provided' });
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         const { fullName, username, phone, profilePicture } = req.body;
@@ -226,11 +213,7 @@ app.put('/update-profile', async (req, res) => {
             return res.status(404).json({ error: 'User not found' });
         }
 
-        res.json({
-            message: 'Profile updated successfully',
-            user: result.rows[0]
-        });
-
+        res.json({ message: 'Profile updated successfully', user: result.rows[0] });
     } catch (error) {
         console.error('Update profile error:', error);
         res.status(500).json({ error: 'Server error during profile update' });
@@ -241,12 +224,9 @@ app.put('/update-profile', async (req, res) => {
 app.get('/profile', async (req, res) => {
     try {
         const token = req.headers.authorization?.split(' ')[1];
-        if (!token) {
-            return res.status(401).json({ error: 'No token provided' });
-        }
+        if (!token) return res.status(401).json({ error: 'No token provided' });
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
         const result = await pool.query(
             'SELECT id, full_name, username, email, phone, profile_picture, is_verified, created_at, updated_at FROM users WHERE id = $1',
             [decoded.id]
@@ -257,39 +237,38 @@ app.get('/profile', async (req, res) => {
         }
 
         res.json({ user: result.rows[0] });
-
     } catch (error) {
         console.error('Get profile error:', error);
         res.status(500).json({ error: 'Server error' });
     }
 });
 
-// ====================== ROOT ROUTE ======================
-app.get('/', (req, res) => {
-    const indexPath1 = path.join(__dirname, 'index.html');
-    const indexPath2 = path.join(process.cwd(), 'index.html');
-
-    if (fs.existsSync(indexPath1)) {
-        return res.sendFile(indexPath1);
-    }
-    if (fs.existsSync(indexPath2)) {
-        return res.sendFile(indexPath2);
-    }
-
-    // Fallback if index.html is not found
-    res.send(`
-        <h1>Zion Memorial Garden</h1>
-        <p>index.html not found. Please check if the file is uploaded to GitHub.</p>
-        <p><a href="/test">Test route</a></p>
-    `);
-});
-
-// Test route
+// ====================== ROOT + TEST ======================
 app.get('/test', (req, res) => {
     res.send('Server is working! ✅');
 });
 
-// ====================== START SERVER ======================
+app.get('/', (req, res) => {
+    const possiblePaths = [
+        path.join(__dirname, 'index.html'),
+        path.join(process.cwd(), 'index.html'),
+        path.join(__dirname, 'public', 'index.html')
+    ];
+
+    for (const p of possiblePaths) {
+        if (fs.existsSync(p)) {
+            return res.sendFile(p);
+        }
+    }
+
+    res.status(404).send(`
+        <h1>index.html not found</h1>
+        <p>Please make sure index.html is in the root of the GitHub repository.</p>
+        <p><a href="/test">Test route</a></p>
+    `);
+});
+
+// ====================== START ======================
 if (require.main === module) {
     app.listen(PORT, () => {
         console.log(`Server running on port ${PORT}`);
