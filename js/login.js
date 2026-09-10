@@ -61,7 +61,7 @@ function initLogin() {
     
     console.log("Login elements check - Button:", !!loginBtn, "Modal:", !!loginModal, "Form:", !!loginForm);
     
-    // Toggle password visibility - ONE listener only, same as register
+    // Toggle password visibility
     setTimeout(() => {
         const toggleIcons = document.querySelectorAll('.login-eye-icon.toggle-password');
         console.log("Found", toggleIcons.length, "toggle icons");
@@ -73,10 +73,8 @@ function initLogin() {
                 if (input) {
                     if (input.type === 'password') {
                         input.type = 'text';
-                        console.log("Password now visible");
                     } else {
                         input.type = 'password';
-                        console.log("Password now hidden");
                     }
                 }
             });
@@ -89,7 +87,7 @@ function initLogin() {
 
             const email = document.getElementById("loginEmail").value;
             const password = document.getElementById("loginPassword").value;
-            const rememberMe = document.getElementById("rememberMe").checked;
+            const rememberMe = document.getElementById("rememberMe") ? document.getElementById("rememberMe").checked : false;
 
             if (!email || !password) {
                 alert("Please fill in all fields");
@@ -97,7 +95,7 @@ function initLogin() {
             }
 
             try {
-              const response = await fetch('/login', {
+                const response = await fetch('/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
@@ -127,17 +125,16 @@ function initLogin() {
                         profilePicture: data.user.profile_picture || '',
                         createdAt: data.user.created_at,
                         lastUpdated: data.user.updated_at ? new Date(data.user.updated_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Today',
-                        isVerified: false
+                        isVerified: data.user.is_verified || false
                     };
                     
                     localStorage.setItem("userProfile", JSON.stringify(userProfile));
 
-                    // IMPORTANT: Always set the picture for THIS user.
-                    // If the account has no picture yet → clear the old one so a new account starts blank.
+                    // Set profile picture - use Polkadot.jpg as default for new accounts
                     if (userProfile.profilePicture) {
                         localStorage.setItem("userProfilePicture", userProfile.profilePicture);
                     } else {
-                        localStorage.removeItem("userProfilePicture"); // new account = blank profile
+                        localStorage.setItem("userProfilePicture", "Polkadot.jpg");
                     }
 
                     window.location.href = "dashboard.html";
