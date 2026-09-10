@@ -11,18 +11,16 @@ function initEditProfilePage() {
     if (cancelBtn) {
         cancelBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            // Close edit profile page
             if (editProfilePage) {
                 editProfilePage.classList.remove('active');
             }
-            // Reopen profile modal
             if (profileModal) {
                 profileModal.classList.add('active');
             }
         });
     }
 
-    // Form submit handler - PostgreSQL Backend version
+    // Form submit handler
     const editProfileForm = document.getElementById('editProfilePageForm');
     if (editProfileForm) {
         editProfileForm.addEventListener('submit', async (e) => {
@@ -32,12 +30,12 @@ function initEditProfilePage() {
                 fullName: document.getElementById('editProfileFullName').value,
                 username: document.getElementById('editProfileUsername').value,
                 phone: document.getElementById('editProfilePhone').value,
-                profilePicture: localStorage.getItem('userProfilePicture') || ''
+                profilePicture: localStorage.getItem('userProfilePicture') || 'Polkadot.jpg'
             };
             
             try {
                 const token = sessionStorage.getItem('authToken');
-                const response = await fetch('/update-profile', {
+                const response = await fetch('/update-profile', {   // ← relative path (important)
                     method: 'PUT',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -53,12 +51,16 @@ function initEditProfilePage() {
                     userProfile.fullName = data.user.full_name;
                     userProfile.username = data.user.username;
                     userProfile.phone = data.user.phone;
+                    userProfile.profilePicture = data.user.profile_picture || updateData.profilePicture;
                     userProfile.lastUpdated = new Date(data.user.updated_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
                     
                     localStorage.setItem('userProfile', JSON.stringify(userProfile));
+                    localStorage.setItem('userProfilePicture', userProfile.profilePicture);
                     
-                    updateProfileDisplay(userProfile);
-                    updateHeaderProfilePicture(updateData.profilePicture);
+                    // Update all pictures on the page
+                    if (typeof window.updateAllProfilePictures === 'function') {
+                        window.updateAllProfilePictures(userProfile.profilePicture);
+                    }
                     
                     if (editProfilePage) {
                         editProfilePage.classList.remove('active');
@@ -73,70 +75,12 @@ function initEditProfilePage() {
                     alert(data.error || "Failed to update profile");
                 }
             } catch (error) {
+                console.error("Update profile error:", error);
                 alert("Could not connect to the server.");
             }
         });
     }
     
-    // Use the global updater (falls back to a local version if not yet loaded)
-    function updateHeaderProfilePicture(pictureUrl) {
-        if (typeof window.updateAllProfilePictures === 'function') {
-            window.updateAllProfilePictures(pictureUrl);
-            return;
-        }
-        // Fallback if global function is not ready
-        if (!pictureUrl) return;
-        const selectors = [
-            '.user-btn img',
-            '#profileUserBtn img',
-            '#editProfileUserBtn img',
-            '#editProfilePicturePreview',
-            '#reservationUserBtn img',
-            '#myReservationUserBtn img',
-            '#deceasedFamilyUserBtn img',
-            '#profilePicture'
-        ];
-        selectors.forEach(sel => {
-            document.querySelectorAll(sel).forEach(img => {
-                if (img) img.src = pictureUrl;
-            });
-        });
-    }
-    
-    // Function to update profile display with new data
-    function updateProfileDisplay(userData) {
-        const fullNameEl = document.getElementById('profileFullName');
-        const usernameEl = document.getElementById('profileUsername');
-        const emailEl = document.getElementById('profileEmail');
-        const phoneEl = document.getElementById('profilePhone');
-        const displayNameEl = document.getElementById('profileDisplayName');
-        const usernameDisplayEl = document.getElementById('profileUsernameDisplay');
-        
-        if (fullNameEl) fullNameEl.textContent = userData.fullName || '-';
-        if (usernameEl) usernameEl.textContent = userData.username || '-';
-        if (emailEl) emailEl.textContent = userData.email || '-';
-        if (phoneEl) phoneEl.textContent = userData.phone || '-';
-        if (displayNameEl) displayNameEl.textContent = (userData.fullName || 'User').toUpperCase();
-        if (usernameDisplayEl) usernameDisplayEl.textContent = userData.username || '';
-        
-        const memberSinceEl = document.getElementById('profileMemberSince');
-        const lastUpdatedEl = document.getElementById('profileLastUpdated');
-        
-        if (memberSinceEl && userData.createdAt) {
-            const createdDate = new Date(userData.createdAt);
-            memberSinceEl.textContent = createdDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-        }
-        
-        if (lastUpdatedEl && userData.lastUpdated) {
-            lastUpdatedEl.textContent = userData.lastUpdated;
-        }
-        
-        const profilePicture = document.getElementById('profilePicture');
-        if (profilePicture && userData.profilePicture) {
-            profilePicture.src = userData.profilePicture;
-        }
-    }
-
     // Profile picture change handler
     const changePicBtn = document.getElementById('editProfileChangePicBtn');
     const pictureInput = document.getElementById('editProfilePictureInput');
@@ -164,10 +108,10 @@ function initEditProfilePage() {
                 reader.onload = (event) => {
                     const imageData = event.target.result;
 
-                    // Save the picture for the current user
+                    // Save the picture
                     localStorage.setItem('userProfilePicture', imageData);
 
-                    // Also save it inside the userProfile object so it stays with this account
+                    // Also update inside userProfile
                     const savedProfile = localStorage.getItem('userProfile');
                     if (savedProfile) {
                         try {
@@ -177,13 +121,15 @@ function initEditProfilePage() {
                         } catch (e) {}
                     }
 
-                    // Update the preview on this page
+                    // Update preview
                     if (picturePreview) {
                         picturePreview.src = imageData;
                     }
 
-                    // Update EVERY avatar across the whole app right away
-                    updateHeaderProfilePicture(imageData);
+                    // Update all avatars immediately
+                    if (typeof window.updateAllProfilePictures === 'function') {
+                        window.updateAllProfilePictures(imageData);
+                    }
                 };
                 reader.readAsDataURL(file);
             }
@@ -207,8 +153,8 @@ function initEditProfilePage() {
                 if (usernameInput && profile.username) usernameInput.value = profile.username;
                 if (phoneInput && profile.phone) phoneInput.value = profile.phone;
                 
-                const savedPicture = localStorage.getItem('userProfilePicture');
-                if (savedPicture && picturePreview) {
+                const savedPicture = localStorage.getItem('userProfilePicture') || 'Polkadot.jpg';
+                if (picturePreview) {
                     picturePreview.src = savedPicture;
                 }
             } catch (e) {
@@ -232,80 +178,11 @@ function initEditProfilePage() {
     }
 }
 
-// =========================================
-// PROFILE MODAL DISPLAY & MANAGEMENT (EVENT DELEGATION)
-// =========================================
-
-function initProfileModal() {
-    function loadProfileData() {
-        const savedUser = localStorage.getItem("userProfile");
-        if (savedUser) {
-            try {
-                const userData = JSON.parse(savedUser);
-                
-                const fullNameEl = document.getElementById("profileFullName");
-                const usernameEl = document.getElementById("profileUsername");
-                const emailEl = document.getElementById("profileEmail");
-                const phoneEl = document.getElementById("profilePhone");
-                const displayNameEl = document.getElementById("profileDisplayName");
-                const usernameDisplayEl = document.getElementById("profileUsernameDisplay");
-                const profileImgElement = document.getElementById("profilePicture");
-
-                if (fullNameEl) fullNameEl.textContent = userData.fullName || "-";
-                if (usernameEl) usernameEl.textContent = userData.username ? "@" + userData.username.replace('@','') : "-";
-                if (emailEl) emailEl.textContent = userData.email || "-";
-                if (phoneEl) phoneEl.textContent = userData.phone || "-";
-                if (displayNameEl) displayNameEl.textContent = userData.fullName || "User";
-                if (usernameDisplayEl) usernameDisplayEl.textContent = userData.username ? "@" + userData.username.replace('@','') : "";
-
-                const profilePic = userData.profilePicture || localStorage.getItem("userProfilePicture");
-                if (profilePic && profileImgElement) {
-                    profileImgElement.src = profilePic;
-                }
-            } catch (e) {
-                console.error("Error loading user profile data:", e);
-            }
-        }
-    }
-
-    document.addEventListener('click', (e) => {
-        const profileModal = document.getElementById("profileModal");
-
-        const userBtn = e.target.closest('#profileUserBtn');
-        if (userBtn) {
-            e.stopPropagation();
-            loadProfileData();
-            if (profileModal) {
-                profileModal.style.display = "flex";
-            }
-            return;
-        }
-
-        const backBtn = e.target.closest('#backToDashboard');
-        if (backBtn) {
-            e.preventDefault();
-            if (profileModal) {
-                profileModal.style.display = "none";
-            }
-            return;
-        }
-
-        const menuBtn = e.target.closest('#profileMenuBtn, .profile-menu-btn');
-        if (menuBtn) {
-            e.stopPropagation();
-            const navMenu = document.querySelector('.nav-menu, .sidebar, .dropdown-menu, .profile-nav');
-            if (navMenu) {
-                navMenu.classList.toggle('active');
-            }
-            return;
-        }
-    });
-}
-
+// Initialize when the page loads
 document.addEventListener("DOMContentLoaded", () => {
-    initProfileModal();
+    initEditProfilePage();
 });
 
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { initProfileModal };
+    module.exports = { initEditProfilePage };
 }
