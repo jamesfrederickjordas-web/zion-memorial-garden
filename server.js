@@ -278,10 +278,16 @@ app.get('/dashboard.html', (req, res) => {
     res.status(404).send('dashboard.html not found');
 });
 
-// ====================== SERVE OTHER HTML PAGES ======================
+// ====================== SERVE OTHER HTML PAGES (SAFE VERSION) ======================
 app.get('/:page', (req, res) => {
     const page = req.params.page;
-    const fileName = page.endsWith('.html') ? page : page + '.html';
+
+    // If the request already has a file extension (jpg, png, css, js, etc.), don't force .html
+    if (page.includes('.')) {
+        return res.status(404).send('File not found');
+    }
+
+    const fileName = page + '.html';
 
     const possiblePaths = [
         path.join(__dirname, fileName),
