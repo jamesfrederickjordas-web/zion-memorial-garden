@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// Serve static files (this must come before the catch-all routes)
+// Serve static files
 app.use(express.static(__dirname));
 app.use(express.static(process.cwd()));
 app.use('/css', express.static(path.join(__dirname, 'css')));
@@ -278,12 +278,40 @@ app.get('/dashboard.html', (req, res) => {
     res.status(404).send('dashboard.html not found');
 });
 
+// ====================== EXPLICIT IMAGE ROUTES ======================
+app.get('/Polkadot.jpg', (req, res) => {
+    const possiblePaths = [
+        path.join(__dirname, 'Polkadot.jpg'),
+        path.join(process.cwd(), 'Polkadot.jpg')
+    ];
+
+    for (const p of possiblePaths) {
+        if (fs.existsSync(p)) {
+            return res.sendFile(p);
+        }
+    }
+    res.status(404).send('Polkadot.jpg not found');
+});
+
+app.get('/face.jpg', (req, res) => {
+    const possiblePaths = [
+        path.join(__dirname, 'face.jpg'),
+        path.join(process.cwd(), 'face.jpg')
+    ];
+
+    for (const p of possiblePaths) {
+        if (fs.existsSync(p)) {
+            return res.sendFile(p);
+        }
+    }
+    res.status(404).send('face.jpg not found');
+});
+
 // ====================== SERVE OTHER HTML PAGES ======================
 app.get('/:page', (req, res, next) => {
     const page = req.params.page;
 
-    // If the request has a file extension (jpg, png, css, js...), 
-    // skip this route so express.static can serve the file
+    // Skip if it has a file extension
     if (page.includes('.')) {
         return next();
     }
