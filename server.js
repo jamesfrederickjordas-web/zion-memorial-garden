@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 
-// Serve static files
+// Serve static files (this must come before the catch-all routes)
 app.use(express.static(__dirname));
 app.use(express.static(process.cwd()));
 app.use('/css', express.static(path.join(__dirname, 'css')));
@@ -278,13 +278,14 @@ app.get('/dashboard.html', (req, res) => {
     res.status(404).send('dashboard.html not found');
 });
 
-// ====================== SERVE OTHER HTML PAGES (SAFE VERSION) ======================
-app.get('/:page', (req, res) => {
+// ====================== SERVE OTHER HTML PAGES ======================
+app.get('/:page', (req, res, next) => {
     const page = req.params.page;
 
-    // If the request already has a file extension (jpg, png, css, js, etc.), don't force .html
+    // If the request has a file extension (jpg, png, css, js...), 
+    // skip this route so express.static can serve the file
     if (page.includes('.')) {
-        return res.status(404).send('File not found');
+        return next();
     }
 
     const fileName = page + '.html';
