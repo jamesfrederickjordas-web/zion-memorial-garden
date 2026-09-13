@@ -378,38 +378,28 @@ function initializeDashboard() {
     // =========================================
 
     const profileModal = document.querySelector('.profile-modal-overlay');
-
     const profileCloseBtn = document.querySelector('.profile-close-btn');
-
     const backToDashboardBtn = document.getElementById('backToDashboard');
-
     const profileMenuBtn = document.getElementById('profileMenuBtn');
-
     const profileUserBtn = document.getElementById('profileUserBtn');
 
 
 
-    function openProfileModal() {
-
-        if (profileModal) {
-
-            // Get user data from session
-
-            const userEmail = sessionStorage.getItem("userEmail") || "user@example.com";
-
-           
-
-            // Update profile modal with user data
-
-            const emailField = document.getElementById('profileEmail');
-
-            if (emailField) emailField.textContent = userEmail;
-
-           
-
-            // Load saved profile data
-
+function openProfileModal() {
+    if (profileModal) {
+        // Get user data from session
+        const userEmail = sessionStorage.getItem("userEmail") || "user@example.com";
+       
+        // Update profile modal with user data
+        const emailField = document.getElementById('profileEmail');
+        if (emailField) emailField.textContent = userEmail;
+       
+        // Load latest profile data from database
+        if (typeof loadProfileFromServer === 'function') {
+            loadProfileFromServer();
+        } else {
             loadProfilePicture();
+        }
 
            
 
