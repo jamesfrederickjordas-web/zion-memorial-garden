@@ -4,49 +4,46 @@
 
 function initLogin() {
     console.log("initLogin() called");
-    
-    // Use event delegation on document to catch clicks regardless of timing
+
+    // Use event delegation for opening the login modal
     document.addEventListener('click', function(e) {
-        // Check if the clicked element is the login button
+        // Open Login Modal
         if (e.target && (e.target.id === 'loginBtn' || e.target.closest('#loginBtn'))) {
             e.preventDefault();
-            console.log("Login button clicked via delegation!");
             const loginModal = document.getElementById("loginModal");
             const registerModal = document.getElementById("registerModal");
-            
+
             if (loginModal) {
                 loginModal.style.display = "block";
-                console.log("Login modal opened");
-            } else {
-                console.error("Login modal not found!");
             }
-            
             if (registerModal) {
                 registerModal.style.display = "none";
             }
+            // Setup password toggle when modal opens
+            setTimeout(setupPasswordToggle, 100);
             return;
         }
-        
-        // Check if close button was clicked
+
+        // Close button
         if (e.target && e.target.classList.contains('login-close')) {
             const loginModal = document.getElementById("loginModal");
             if (loginModal) loginModal.style.display = "none";
             return;
         }
-        
-        // Check if clicked outside modal
+
+        // Click outside modal
         const loginModal = document.getElementById("loginModal");
         if (e.target === loginModal) {
             loginModal.style.display = "none";
             return;
         }
-        
-        // Check if "Register now" link was clicked
+
+        // Switch to Register
         if (e.target && e.target.id === 'showRegisterLink') {
             e.preventDefault();
             const loginModal = document.getElementById("loginModal");
             if (loginModal) loginModal.style.display = "none";
-            
+
             setTimeout(() => {
                 const registerBtn = document.getElementById("registerBtn");
                 if (registerBtn) registerBtn.click();
@@ -54,38 +51,62 @@ function initLogin() {
             return;
         }
     });
-    
-    const loginForm = document.getElementById("loginForm");
-    const loginBtn = document.getElementById("loginBtn");
-    const loginModal = document.getElementById("loginModal");
-    
-    console.log("Login elements check - Button:", !!loginBtn, "Modal:", !!loginModal, "Form:", !!loginForm);
-    
-    // Toggle password visibility
-    setTimeout(() => {
-        const toggleIcons = document.querySelectorAll('.login-eye-icon.toggle-password');
-        console.log("Found", toggleIcons.length, "toggle icons");
+
+    // ====================== PASSWORD TOGGLE ======================
+    function setupPasswordToggle() {
+        const toggleIcons = document.querySelectorAll('.login-eye-icon, .toggle-password, .eye-icon, [class*="eye"]');
+
         toggleIcons.forEach(icon => {
+            // Prevent multiple listeners
+            if (icon.dataset.toggleReady) return;
+            icon.dataset.toggleReady = "true";
+
+            icon.style.cursor = "pointer";
+
             icon.addEventListener('click', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                const input = this.parentElement.querySelector('input');
+
+                // Find the password input
+                let input = null;
+
+                // Try different ways to find the input
+                if (this.closest('.password-field')) {
+                    input = this.closest('.password-field').querySelector('input');
+                } else if (this.closest('.input-group')) {
+                    input = this.closest('.input-group').querySelector('input');
+                } else if (this.closest('.form-group')) {
+                    input = this.closest('.form-group').querySelector('input');
+                } else if (this.parentElement) {
+                    input = this.parentElement.querySelector('input');
+                }
+
                 if (input) {
                     if (input.type === 'password') {
                         input.type = 'text';
+                        this.classList.add('active');
+                        // Optional: change icon if you have different images
                     } else {
                         input.type = 'password';
+                        this.classList.remove('active');
                     }
                 }
             });
         });
-    }, 200);
-    
+    }
+
+    // Run the toggle setup
+    setTimeout(setupPasswordToggle, 300);
+    setTimeout(setupPasswordToggle, 800);
+
+    // ====================== LOGIN FORM ======================
+    const loginForm = document.getElementById("loginForm");
+
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
-            const email = document.getElementById("loginEmail").value;
+            const email = document.getElementById("loginEmail").value.trim();
             const password = document.getElementById("loginPassword").value;
             const rememberMe = document.getElementById("rememberMe") ? document.getElementById("rememberMe").checked : false;
 
@@ -100,9 +121,9 @@ function initLogin() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
-                
+
                 const data = await response.json();
-                
+
                 if (response.ok) {
                     sessionStorage.clear();
 
@@ -124,13 +145,15 @@ function initLogin() {
                         phone: data.user.phone || '',
                         profilePicture: data.user.profile_picture || '',
                         createdAt: data.user.created_at,
-                        lastUpdated: data.user.updated_at ? new Date(data.user.updated_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'Today',
+                        lastUpdated: data.user.updated_at 
+                            ? new Date(data.user.updated_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) 
+                            : 'Today',
                         isVerified: data.user.is_verified || false
                     };
-                    
+
                     localStorage.setItem("userProfile", JSON.stringify(userProfile));
 
-                    // Set profile picture - use Polkadot.jpg as default for new accounts
+                    // Set profile picture (Polkadot.jpg as default for new accounts)
                     if (userProfile.profilePicture) {
                         localStorage.setItem("userProfilePicture", userProfile.profilePicture);
                     } else {
@@ -149,7 +172,12 @@ function initLogin() {
     }
 }
 
-// Export or initialize
+// Initialize
+document.addEventListener("DOMContentLoaded", () => {
+    initLogin();
+});
+
+// Also export if needed
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { initLogin };
 }
