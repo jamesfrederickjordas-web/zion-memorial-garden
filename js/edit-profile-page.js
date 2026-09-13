@@ -27,15 +27,15 @@ function initEditProfilePage() {
             e.preventDefault();
             
             const updateData = {
-                fullName: document.getElementById('editProfileFullName').value,
-                username: document.getElementById('editProfileUsername').value,
-                phone: document.getElementById('editProfilePhone').value,
+                fullName: document.getElementById('editProfileFullName').value.trim(),
+                username: document.getElementById('editProfileUsername').value.trim(),
+                phone: document.getElementById('editProfilePhone').value.trim(),
                 profilePicture: localStorage.getItem('userProfilePicture') || 'Polkadot.jpg'
             };
             
             try {
                 const token = sessionStorage.getItem('authToken');
-                const response = await fetch('/update-profile', {   // ← relative path (important)
+                const response = await fetch('/update-profile', {
                     method: 'PUT',
                     headers: { 
                         'Content-Type': 'application/json',
@@ -47,29 +47,41 @@ function initEditProfilePage() {
                 const data = await response.json();
                 
                 if (response.ok) {
+                    // Update localStorage with new data
                     const userProfile = JSON.parse(localStorage.getItem('userProfile') || '{}');
                     userProfile.fullName = data.user.full_name;
                     userProfile.username = data.user.username;
                     userProfile.phone = data.user.phone;
                     userProfile.profilePicture = data.user.profile_picture || updateData.profilePicture;
-                    userProfile.lastUpdated = new Date(data.user.updated_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                    userProfile.lastUpdated = new Date(data.user.updated_at).toLocaleDateString('en-US', { 
+                        month: 'long', 
+                        day: 'numeric', 
+                        year: 'numeric' 
+                    });
                     
                     localStorage.setItem('userProfile', JSON.stringify(userProfile));
                     localStorage.setItem('userProfilePicture', userProfile.profilePicture);
-                    
-                    // Update all pictures on the page
+
+                    // Force refresh Profile page from database
+                    if (typeof window.loadProfileFromServer === 'function') {
+                        await window.loadProfileFromServer();
+                    } else if (typeof window.updateProfileDisplay === 'function') {
+                        window.updateProfileDisplay(userProfile);
+                    }
+
+                    // Update all profile pictures
                     if (typeof window.updateAllProfilePictures === 'function') {
                         window.updateAllProfilePictures(userProfile.profilePicture);
                     }
-                    
+
+                    // Close edit page and open profile modal
                     if (editProfilePage) {
                         editProfilePage.classList.remove('active');
                     }
-                    
                     if (profileModal) {
                         profileModal.classList.add('active');
                     }
-                    
+
                     alert('Profile updated successfully!');
                 } else {
                     alert(data.error || "Failed to update profile");
