@@ -383,7 +383,86 @@ function initializeDashboard() {
     const profileMenuBtn = document.getElementById('profileMenuBtn');
     const profileUserBtn = document.getElementById('profileUserBtn');
 
+// ====================== LOAD PROFILE FROM DATABASE ======================
+async function loadProfileFromServer() {
+    const token = sessionStorage.getItem('authToken');
+    if (!token) return;
 
+    try {
+        const response = await fetch('/profile', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.user) {
+            const user = data.user;
+
+            const userProfile = {
+                id: user.id,
+                fullName: user.full_name || '',
+                username: user.username || '',
+                email: user.email || '',
+                phone: user.phone || '',
+                profilePicture: user.profile_picture || 'Polkadot.jpg',
+                isVerified: user.is_verified || false,
+                createdAt: user.created_at,
+                lastUpdated: user.updated_at 
+                    ? new Date(user.updated_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) 
+                    : 'Today'
+            };
+
+            localStorage.setItem('userProfile', JSON.stringify(userProfile));
+            localStorage.setItem('userProfilePicture', userProfile.profilePicture);
+
+            updateProfileDisplay(userProfile);
+
+            if (typeof window.updateAllProfilePictures === 'function') {
+                window.updateAllProfilePictures(userProfile.profilePicture);
+            }
+        }
+    } catch (error) {
+        console.error('Failed to load profile from server:', error);
+    }
+}
+
+function updateProfileDisplay(userData) {
+    const fullNameEl = document.getElementById('profileFullName');
+    const usernameEl = document.getElementById('profileUsername');
+    const emailEl = document.getElementById('profileEmail');
+    const phoneEl = document.getElementById('profilePhone');
+    const displayNameEl = document.getElementById('profileDisplayName');
+    const usernameDisplayEl = document.getElementById('profileUsernameDisplay');
+    
+    const verificationEl = document.getElementById('profileVerificationStatus') 
+                        || document.querySelector('.verification-status')
+                        || document.querySelector('[class*="verification"]');
+
+    if (fullNameEl) fullNameEl.textContent = userData.fullName || '-';
+    if (usernameEl) usernameEl.textContent = userData.username || '-';
+    if (emailEl) emailEl.textContent = userData.email || '-';
+    if (phoneEl) phoneEl.textContent = userData.phone || '-';
+    if (displayNameEl) displayNameEl.textContent = (userData.fullName || 'User').toUpperCase();
+    if (usernameDisplayEl) usernameDisplayEl.textContent = userData.username || '';
+
+    if (verificationEl) {
+        if (userData.isVerified) {
+            verificationEl.textContent = 'Verified';
+            verificationEl.style.backgroundColor = '#27ae60';
+            verificationEl.style.color = 'white';
+        } else {
+            verificationEl.textContent = 'Unverified';
+            verificationEl.style.backgroundColor = '#f39c12';
+            verificationEl.style.color = 'white';
+        }
+    }
+}
+
+window.loadProfileFromServer = loadProfileFromServer;
+window.updateProfileDisplay = updateProfileDisplay;
 
 function openProfileModal() {
     if (profileModal) {
