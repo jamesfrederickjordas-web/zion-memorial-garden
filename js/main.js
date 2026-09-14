@@ -27,40 +27,46 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// ====================== GLOBAL PASSWORD SHOW/HIDE ======================
+// ====================== STRONGER PASSWORD SHOW/HIDE ======================
 document.addEventListener('click', function (e) {
-    const eye = e.target.closest('.login-eye-icon, .register-eye-icon, .toggle-password, .eye-icon, [class*="eye"]');
-    
-    if (!eye) return;
+    // Check if clicked element is an eye icon
+    if (e.target.classList.contains('login-eye-icon') || 
+        e.target.classList.contains('register-eye-icon') || 
+        e.target.classList.contains('toggle-password') ||
+        e.target.classList.contains('eye-icon') ||
+        e.target.closest('[class*="eye"]')) {
 
-    e.preventDefault();
-    e.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
 
-    // Find the password input near the eye icon
-    let input = null;
+        // Login password
+        const loginPassword = document.getElementById('loginPassword');
+        if (loginPassword) {
+            if (loginPassword.type === 'password') {
+                loginPassword.type = 'text';
+            } else {
+                loginPassword.type = 'password';
+            }
+        }
 
-    // Try different common structures
-    const container = eye.closest('.password-field, .input-group, .form-group, .input-wrapper, .form-control, .password-wrapper');
-    
-    if (container) {
-        input = container.querySelector('input[type="password"], input[type="text"]');
-    }
+        // Register password
+        const regPassword = document.getElementById('regPassword');
+        if (regPassword) {
+            if (regPassword.type === 'password') {
+                regPassword.type = 'text';
+            } else {
+                regPassword.type = 'password';
+            }
+        }
 
-    // Fallback methods
-    if (!input) {
-        input = eye.previousElementSibling;
-    }
-    if (!input || input.tagName !== 'INPUT') {
-        input = eye.parentElement?.querySelector('input');
-    }
-
-    if (input && (input.type === 'password' || input.type === 'text')) {
-        if (input.type === 'password') {
-            input.type = 'text';
-            eye.classList.add('active');
-        } else {
-            input.type = 'password';
-            eye.classList.remove('active');
+        // Confirm password
+        const regConfirmPassword = document.getElementById('regConfirmPassword');
+        if (regConfirmPassword) {
+            if (regConfirmPassword.type === 'password') {
+                regConfirmPassword.type = 'text';
+            } else {
+                regConfirmPassword.type = 'password';
+            }
         }
     }
 });
