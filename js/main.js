@@ -27,46 +27,30 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// ====================== STRONGER PASSWORD SHOW/HIDE ======================
+// ====================== VERY STRONG PASSWORD TOGGLE ======================
 document.addEventListener('click', function (e) {
-    // Check if clicked element is an eye icon
-    if (e.target.classList.contains('login-eye-icon') || 
-        e.target.classList.contains('register-eye-icon') || 
-        e.target.classList.contains('toggle-password') ||
-        e.target.classList.contains('eye-icon') ||
-        e.target.closest('[class*="eye"]')) {
+    // If the clicked element looks like an eye icon
+    const isEye = e.target.closest('i, span, button, img, svg, div') && 
+                  (e.target.className.toLowerCase().includes('eye') || 
+                   e.target.parentElement?.className.toLowerCase().includes('eye') ||
+                   e.target.getAttribute('aria-label')?.toLowerCase().includes('password'));
 
-        e.preventDefault();
-        e.stopPropagation();
+    if (!isEye && !e.target.closest('[class*="eye"]')) return;
 
-        // Login password
-        const loginPassword = document.getElementById('loginPassword');
-        if (loginPassword) {
-            if (loginPassword.type === 'password') {
-                loginPassword.type = 'text';
-            } else {
-                loginPassword.type = 'password';
-            }
-        }
+    e.preventDefault();
+    e.stopPropagation();
 
-        // Register password
-        const regPassword = document.getElementById('regPassword');
-        if (regPassword) {
-            if (regPassword.type === 'password') {
-                regPassword.type = 'text';
-            } else {
-                regPassword.type = 'password';
-            }
-        }
+    // Find the closest password input
+    let input = e.target.closest('div, form, .form-group, .input-group')?.querySelector('input[type="password"], input[type="text"]');
 
-        // Confirm password
-        const regConfirmPassword = document.getElementById('regConfirmPassword');
-        if (regConfirmPassword) {
-            if (regConfirmPassword.type === 'password') {
-                regConfirmPassword.type = 'text';
-            } else {
-                regConfirmPassword.type = 'password';
-            }
-        }
+    // Fallback: search common password fields
+    if (!input) {
+        input = document.getElementById('loginPassword') || 
+                document.getElementById('regPassword') || 
+                document.getElementById('regConfirmPassword');
+    }
+
+    if (input) {
+        input.type = input.type === 'password' ? 'text' : 'password';
     }
 });
