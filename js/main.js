@@ -24,47 +24,57 @@ document.addEventListener("DOMContentLoaded", () => {
         if (emailInput) emailInput.value = rememberedEmail;
         if (rememberCheckbox) rememberCheckbox.checked = true;
     }
-
-    // Setup password toggles
-    setupPasswordToggles();
 });
 
-// ====================== PASSWORD SHOW / HIDE ======================
-function setupPasswordToggles() {
-    // Login eye
-    const loginEye = document.querySelector(".login-eye-icon");
-    if (loginEye) {
-        loginEye.onclick = function () {
-            const passwordInput = document.getElementById("loginPassword");
-            if (passwordInput) {
-                passwordInput.type = passwordInput.type === "password" ? "text" : "password";
-            }
-        };
+// ====================== PASSWORD SHOW / HIDE - FIXED FOR ALL ======================
+document.addEventListener('click', function(e) {
+    const eye = e.target.closest('.login-eye-icon, .register-eye-icon, .toggle-password, [class*="eye"]');
+    
+    if (!eye) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Find the closest input
+    let input = null;
+
+    // Method 1: Look inside the same parent wrapper
+    const wrapper = eye.closest('.password-input-wrapper, .input-group, .form-group, .password-field');
+    if (wrapper) {
+        input = wrapper.querySelector('input[type="password"], input[type="text"]');
     }
 
-    // Register eyes
-    const registerEyes = document.querySelectorAll(".register-eye-icon, .toggle-password");
-    registerEyes.forEach((eye, index) => {
-        eye.onclick = function () {
-            // Try common IDs
-            let input = document.getElementById("regPassword") || 
-                        document.getElementById("regConfirmPassword");
+    // Method 2: Use common IDs based on which eye was clicked
+    if (!input) {
+        if (eye.classList.contains('login-eye-icon')) {
+            input = document.getElementById('loginPassword');
+        } else {
+            // For register
+            const allEyes = Array.from(document.querySelectorAll('.register-eye-icon, .toggle-password'));
+            const index = allEyes.indexOf(eye);
 
-            // If there are two eyes, first one is password, second is confirm
-            if (registerEyes.length >= 2) {
-                input = index === 0 
-                    ? document.getElementById("regPassword") 
-                    : document.getElementById("regConfirmPassword");
+            if (index === 0) {
+                input = document.getElementById('regPassword');
+            } else {
+                input = document.getElementById('regConfirmPassword');
             }
+        }
+    }
 
-            if (input) {
-                input.type = input.type === "password" ? "text" : "password";
-            }
-        };
-    });
-}
+    // Method 3: Final fallback
+    if (!input) {
+        input = document.getElementById('loginPassword') || 
+                document.getElementById('regPassword') || 
+                document.getElementById('regConfirmPassword');
+    }
 
-// Run again after delays (because modals load later)
-setTimeout(setupPasswordToggles, 500);
-setTimeout(setupPasswordToggles, 1200);
-setTimeout(setupPasswordToggles, 2000);
+    if (input) {
+        if (input.type === 'password') {
+            input.type = 'text';
+            eye.style.opacity = '0.5';
+        } else {
+            input.type = 'password';
+            eye.style.opacity = '1';
+        }
+    }
+});
