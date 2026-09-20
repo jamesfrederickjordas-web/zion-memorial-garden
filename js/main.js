@@ -26,32 +26,34 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// ====================== PASSWORD SHOW / HIDE - FIXED FOR ALL ======================
+// ====================== SIMPLE PASSWORD TOGGLE ======================
 document.addEventListener('click', function(e) {
-    const eye = e.target.closest('.login-eye-icon, .register-eye-icon, .toggle-password, [class*="eye"]');
-    
-    if (!eye) return;
-
-    e.preventDefault();
-    e.stopPropagation();
-
-    // Find the closest input
-    let input = null;
-
-    // Method 1: Look inside the same parent wrapper
-    const wrapper = eye.closest('.password-input-wrapper, .input-group, .form-group, .password-field');
-    if (wrapper) {
-        input = wrapper.querySelector('input[type="password"], input[type="text"]');
+    // Login eye
+    if (e.target.classList.contains('login-eye-icon') || e.target.closest('.login-eye-icon')) {
+        const passwordInput = document.getElementById('loginPassword');
+        if (passwordInput) {
+            passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password';
+        }
+        return;
     }
 
-    // Method 2: Use common IDs based on which eye was clicked
-    if (!input) {
-        if (eye.classList.contains('login-eye-icon')) {
-            input = document.getElementById('loginPassword');
-        } else {
-            // For register
-            const allEyes = Array.from(document.querySelectorAll('.register-eye-icon, .toggle-password'));
-            const index = allEyes.indexOf(eye);
+    // Register eyes
+    if (e.target.classList.contains('register-eye-icon') || 
+        e.target.classList.contains('toggle-password') || 
+        e.target.closest('.register-eye-icon') || 
+        e.target.closest('.toggle-password')) {
+        
+        const wrapper = e.target.closest('.password-input-wrapper, .input-group, .form-group');
+        let input = null;
+
+        if (wrapper) {
+            input = wrapper.querySelector('input');
+        }
+
+        if (!input) {
+            const allEyes = document.querySelectorAll('.register-eye-icon, .toggle-password');
+            const clickedEye = e.target.closest('.register-eye-icon, .toggle-password') || e.target;
+            const index = Array.from(allEyes).indexOf(clickedEye);
 
             if (index === 0) {
                 input = document.getElementById('regPassword');
@@ -59,22 +61,9 @@ document.addEventListener('click', function(e) {
                 input = document.getElementById('regConfirmPassword');
             }
         }
-    }
 
-    // Method 3: Final fallback
-    if (!input) {
-        input = document.getElementById('loginPassword') || 
-                document.getElementById('regPassword') || 
-                document.getElementById('regConfirmPassword');
-    }
-
-    if (input) {
-        if (input.type === 'password') {
-            input.type = 'text';
-            eye.style.opacity = '0.5';
-        } else {
-            input.type = 'password';
-            eye.style.opacity = '1';
+        if (input) {
+            input.type = input.type === 'password' ? 'text' : 'password';
         }
     }
 });
