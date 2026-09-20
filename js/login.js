@@ -5,9 +5,8 @@
 function initLogin() {
     console.log("initLogin() called");
 
-    // Use event delegation for opening the login modal
+    // Open Login Modal
     document.addEventListener('click', function(e) {
-        // Open Login Modal
         if (e.target && (e.target.id === 'loginBtn' || e.target.closest('#loginBtn'))) {
             e.preventDefault();
             const loginModal = document.getElementById("loginModal");
@@ -19,8 +18,6 @@ function initLogin() {
             if (registerModal) {
                 registerModal.style.display = "none";
             }
-            // Setup password toggle when modal opens
-            setTimeout(setupPasswordToggle, 100);
             return;
         }
 
@@ -31,7 +28,7 @@ function initLogin() {
             return;
         }
 
-        // Click outside modal
+        // Click outside
         const loginModal = document.getElementById("loginModal");
         if (e.target === loginModal) {
             loginModal.style.display = "none";
@@ -53,51 +50,25 @@ function initLogin() {
     });
 
     // ====================== PASSWORD TOGGLE ======================
-    function setupPasswordToggle() {
-        const toggleIcons = document.querySelectorAll('.login-eye-icon, .toggle-password, .eye-icon, [class*="eye"]');
-
-        toggleIcons.forEach(icon => {
-            // Prevent multiple listeners
-            if (icon.dataset.toggleReady) return;
-            icon.dataset.toggleReady = "true";
-
-            icon.style.cursor = "pointer";
-
-            icon.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-
-                // Find the password input
-                let input = null;
-
-                // Try different ways to find the input
-                if (this.closest('.password-field')) {
-                    input = this.closest('.password-field').querySelector('input');
-                } else if (this.closest('.input-group')) {
-                    input = this.closest('.input-group').querySelector('input');
-                } else if (this.closest('.form-group')) {
-                    input = this.closest('.form-group').querySelector('input');
-                } else if (this.parentElement) {
-                    input = this.parentElement.querySelector('input');
-                }
-
-                if (input) {
-                    if (input.type === 'password') {
-                        input.type = 'text';
-                        this.classList.add('active');
-                        // Optional: change icon if you have different images
-                    } else {
-                        input.type = 'password';
-                        this.classList.remove('active');
-                    }
-                }
-            });
+    const loginEyeIcon = document.querySelector(".login-eye-icon");
+    if (loginEyeIcon) {
+        loginEyeIcon.addEventListener('click', function() {
+            const passwordInput = document.getElementById("loginPassword");
+            if (passwordInput) {
+                passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password';
+            }
         });
     }
 
-    // Run the toggle setup
-    setTimeout(setupPasswordToggle, 300);
-    setTimeout(setupPasswordToggle, 800);
+    // Also support click on the image itself
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('login-eye-icon') || e.target.closest('.login-eye-icon')) {
+            const passwordInput = document.getElementById("loginPassword");
+            if (passwordInput) {
+                passwordInput.type = passwordInput.type === 'password' ? 'text' : 'password';
+            }
+        }
+    });
 
     // ====================== LOGIN FORM ======================
     const loginForm = document.getElementById("loginForm");
@@ -153,7 +124,7 @@ function initLogin() {
 
                     localStorage.setItem("userProfile", JSON.stringify(userProfile));
 
-                    // Set profile picture (Polkadot.jpg as default for new accounts)
+                    // Default profile picture
                     if (userProfile.profilePicture) {
                         localStorage.setItem("userProfilePicture", userProfile.profilePicture);
                     } else {
@@ -177,7 +148,6 @@ document.addEventListener("DOMContentLoaded", () => {
     initLogin();
 });
 
-// Also export if needed
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { initLogin };
 }
