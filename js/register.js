@@ -49,6 +49,31 @@ function initRegister() {
         }
     });
 
+    // ====================== PASSWORD TOGGLE ======================
+    // Support multiple eyes in register form
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('register-eye-icon') || 
+            e.target.classList.contains('toggle-password') ||
+            e.target.closest('.register-eye-icon') ||
+            e.target.closest('.toggle-password')) {
+
+            const allEyes = document.querySelectorAll('.register-eye-icon, .toggle-password');
+            const clickedEye = e.target.closest('.register-eye-icon, .toggle-password') || e.target;
+            const index = Array.from(allEyes).indexOf(clickedEye);
+
+            let input;
+            if (index === 0) {
+                input = document.getElementById("regPassword");
+            } else {
+                input = document.getElementById("regConfirmPassword");
+            }
+
+            if (input) {
+                input.type = input.type === 'password' ? 'text' : 'password';
+            }
+        }
+    });
+
     // Phone number validation - only numbers, max 11 digits
     const phoneInput = document.getElementById("regPhone");
     if (phoneInput) {
@@ -59,16 +84,9 @@ function initRegister() {
             }
             e.target.value = value;
         });
-
-        phoneInput.addEventListener('keypress', (e) => {
-            if (!/[0-9]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Delete' && e.key !== 'Tab') {
-                e.preventDefault();
-                alert("Numbers only! Please enter digits 0-9");
-            }
-        });
     }
 
-    // Handle registration form submission - Backend version
+    // Handle registration form submission
     const registerForm = document.getElementById("newRegisterForm");
     if (registerForm) {
         registerForm.addEventListener('submit', async (e) => {
@@ -84,46 +102,27 @@ function initRegister() {
             };
 
             // ===== VALIDATIONS =====
-
-            // Full Name
             if (!formData.fullName) {
                 alert("Please enter your Full Name");
                 return;
             }
-
-            // Username
             if (!formData.username) {
                 alert("Please enter a Username");
                 return;
             }
 
-            // Email - must contain @ and be a valid format
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!formData.email) {
-                alert("Please enter your Email Address");
-                return;
-            }
-            if (!emailRegex.test(formData.email)) {
+            if (!formData.email || !emailRegex.test(formData.email)) {
                 alert("Please enter a valid Email Address (must contain @)");
                 return;
             }
 
-            // Phone - must start with 09 and be exactly 11 digits
-            if (!formData.phone) {
-                alert("Please enter your Phone Number");
-                return;
-            }
-            if (!/^09\d{9}$/.test(formData.phone)) {
-                alert("Phone number must start with 09 and be exactly 11 digits (example: 09123456789)");
+            if (!formData.phone || !/^09\d{9}$/.test(formData.phone)) {
+                alert("Phone number must start with 09 and be exactly 11 digits");
                 return;
             }
 
-            // Password - at least 8 characters, 1 number, 1 special character
-            if (!formData.password) {
-                alert("Please enter a Password");
-                return;
-            }
-            if (formData.password.length < 8) {
+            if (!formData.password || formData.password.length < 8) {
                 alert("Password must be at least 8 characters long");
                 return;
             }
@@ -132,18 +131,17 @@ function initRegister() {
                 return;
             }
             if (!/[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\;'/`~]/.test(formData.password)) {
-                alert("Password must contain at least 1 special character (example: ! @ # $ %)");
+                alert("Password must contain at least 1 special character");
                 return;
             }
 
-            // Confirm Password
             if (formData.password !== formData.confirmPassword) {
                 alert("Passwords do not match!");
                 return;
             }
 
             try {
-               const response = await fetch('/register', {
+                const response = await fetch('/register', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(formData)
@@ -152,7 +150,7 @@ function initRegister() {
                 const data = await response.json();
                 
                 if (response.ok) {
-                    alert("Registration successful! You can now log in.");
+                    alert("Registration successful! Please check your email to verify your account before logging in.");
                     if (registerModal) registerModal.style.display = "none";
                     const loginBtn = document.getElementById("loginBtn");
                     if (loginBtn) loginBtn.click();
@@ -164,24 +162,13 @@ function initRegister() {
             }
         });
     }
-
-    // Toggle password visibility for both password fields
-    const toggleIcons = document.querySelectorAll('.toggle-password');
-    toggleIcons.forEach(icon => {
-        icon.addEventListener('click', function() {
-            const input = this.parentElement.querySelector('input');
-            if (input) {
-                if (input.type === 'password') {
-                    input.type = 'text';
-                } else {
-                    input.type = 'password';
-                }
-            }
-        });
-    });
 }
 
-// Export for use in main.js
+// Initialize
+document.addEventListener("DOMContentLoaded", () => {
+    initRegister();
+});
+
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { initRegister };
 }
