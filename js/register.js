@@ -49,28 +49,39 @@ function initRegister() {
         }
     });
 
-    // ====================== PASSWORD TOGGLE ======================
-    // Support multiple eyes in register form
+    // ====================== PASSWORD TOGGLE (INDEPENDENT) ======================
     document.addEventListener('click', function(e) {
-        if (e.target.classList.contains('register-eye-icon') || 
-            e.target.classList.contains('toggle-password') ||
-            e.target.closest('.register-eye-icon') ||
-            e.target.closest('.toggle-password')) {
+        const eye = e.target.closest('.register-eye-icon, .toggle-password');
+        
+        if (!eye) return;
 
-            const allEyes = document.querySelectorAll('.register-eye-icon, .toggle-password');
-            const clickedEye = e.target.closest('.register-eye-icon, .toggle-password') || e.target;
-            const index = Array.from(allEyes).indexOf(clickedEye);
+        e.preventDefault();
+        e.stopPropagation();
 
-            let input;
-            if (index === 0) {
-                input = document.getElementById("regPassword");
-            } else {
-                input = document.getElementById("regConfirmPassword");
-            }
-
+        // Find the input that belongs to this specific eye
+        const wrapper = eye.closest('.password-input-wrapper, .input-group, .form-group, .password-field');
+        
+        if (wrapper) {
+            const input = wrapper.querySelector('input');
             if (input) {
                 input.type = input.type === 'password' ? 'text' : 'password';
             }
+            return;
+        }
+
+        // Fallback using index
+        const allEyes = Array.from(document.querySelectorAll('.register-eye-icon, .toggle-password'));
+        const index = allEyes.indexOf(eye);
+
+        let input = null;
+        if (index === 0) {
+            input = document.getElementById('regPassword');
+        } else if (index === 1) {
+            input = document.getElementById('regConfirmPassword');
+        }
+
+        if (input) {
+            input.type = input.type === 'password' ? 'text' : 'password';
         }
     });
 
