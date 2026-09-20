@@ -5,7 +5,6 @@
 document.addEventListener("DOMContentLoaded", () => {
     console.log("Zion Memorial Garden - Application Loaded");
 
-    // Initialize global modules if their functions exist
     if (typeof initLogin === 'function') {
         initLogin();
     }
@@ -16,7 +15,7 @@ document.addEventListener("DOMContentLoaded", () => {
         initProfileModal();
     }
 
-    // Handle remembered email on login form if present
+    // Remembered email
     const rememberedEmail = localStorage.getItem("rememberedEmail");
     if (rememberedEmail) {
         const emailInput = document.getElementById("loginEmail");
@@ -27,30 +26,28 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 
-// ====================== VERY STRONG PASSWORD TOGGLE ======================
+// ====================== PASSWORD SHOW / HIDE (FIXED) ======================
 document.addEventListener('click', function (e) {
-    // If the clicked element looks like an eye icon
-    const isEye = e.target.closest('i, span, button, img, svg, div') && 
-                  (e.target.className.toLowerCase().includes('eye') || 
-                   e.target.parentElement?.className.toLowerCase().includes('eye') ||
-                   e.target.getAttribute('aria-label')?.toLowerCase().includes('password'));
+    const eye = e.target.closest('.login-eye-icon, .toggle-password, .register-eye-icon');
 
-    if (!isEye && !e.target.closest('[class*="eye"]')) return;
+    if (!eye) return;
 
     e.preventDefault();
     e.stopPropagation();
 
-    // Find the closest password input
-    let input = e.target.closest('div, form, .form-group, .input-group')?.querySelector('input[type="password"], input[type="text"]');
+    // Find the closest password-input-wrapper
+    const wrapper = eye.closest('.password-input-wrapper');
+    if (!wrapper) return;
 
-    // Fallback: search common password fields
-    if (!input) {
-        input = document.getElementById('loginPassword') || 
-                document.getElementById('regPassword') || 
-                document.getElementById('regConfirmPassword');
-    }
+    const input = wrapper.querySelector('input');
 
     if (input) {
-        input.type = input.type === 'password' ? 'text' : 'password';
+        if (input.type === 'password') {
+            input.type = 'text';
+            eye.style.opacity = '0.6';
+        } else {
+            input.type = 'password';
+            eye.style.opacity = '1';
+        }
     }
 });
