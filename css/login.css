@@ -196,3 +196,15 @@
 .close-btn:hover {
     color: #333;
 }
+/* ====================== FORCE EYE ICONS TO BE CLICKABLE ====================== */
+.login-eye-icon,
+.register-eye-icon,
+.toggle-password,
+.icon-right,
+.password-input-wrapper img,
+.input-wrapper img {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+    z-index: 99999 !important;
+    opacity: 1 !important;
+}
